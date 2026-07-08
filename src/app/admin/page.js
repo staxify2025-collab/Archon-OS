@@ -451,6 +451,9 @@ export default function AdminDashboard() {
             <div className="panel-header">
               <h3>County Organizational Registry</h3>
               <div style={{ display: 'flex', gap: '1rem' }}>
+                <button className="btn-premium btn-secondary" onClick={() => window.print()} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  🖨️ Print / Save PDF
+                </button>
                 <button className="btn-premium" onClick={() => setShowAddPosition(true)}>
                   + Add Position
                 </button>
@@ -466,6 +469,32 @@ export default function AdminDashboard() {
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+
+            {/* Print-Only Report Header */}
+            <div className="print-only-header">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #1e293b', paddingBottom: '0.8rem', marginBottom: '1.2rem' }}>
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a' }}>HOUSTON COUNTY COMMISSION</h1>
+                  <h2 style={{ margin: '0.2rem 0 0 0', fontSize: '1.05rem', color: '#475569', fontWeight: '600' }}>Personnel & Approved Budget Slot Registry</h2>
+                </div>
+                <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#475569' }}>
+                  <div><strong>Date Generated:</strong> {new Date().toLocaleDateString('en-US')}</div>
+                  <div><strong>Report Status:</strong> Official Audit Copy</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.2rem', fontSize: '0.85rem', background: '#f8fafc', padding: '0.8rem', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                <div><strong>Selected Scope:</strong> {selectedDept === 'All' ? 'All County Departments' : `${selectedDept} - ${departments.find(d => d.cost_center_code === selectedDept)?.name}`}</div>
+                <div><strong>Approved Budget Slots:</strong> {filteredPositions.reduce((acc, p) => acc + p.approved_slots, 0)}</div>
+                <div><strong>Filled Slots:</strong> {filteredPositions.reduce((acc, p) => acc + p.filled_slots, 0)}</div>
+                <div><strong>Vacancy Rate:</strong> {
+                  (() => {
+                    const app = filteredPositions.reduce((acc, p) => acc + p.approved_slots, 0);
+                    const fil = filteredPositions.reduce((acc, p) => acc + p.filled_slots, 0);
+                    return app > 0 ? Math.round(((app - fil) / app) * 100) + '%' : '0%';
+                  })()
+                }</div>
               </div>
             </div>
 
@@ -866,9 +895,9 @@ export default function AdminDashboard() {
         {activeTab === 'ai-memo' && (
           <section className="dashboard-grid">
             <div className="glass-panel" style={{ padding: '2rem' }}>
-              <h2 style={{ marginBottom: '0.5rem' }}>Gemini AI Personnel Memo Parser</h2>
+              <h2 style={{ marginBottom: '0.5rem' }}>Archon AI Personnel Memo Parser</h2>
               <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-                Paste raw emails, data dumps, or textual personnel adjustment forms. Gemini will parse them into structured database actions.
+                Paste raw emails, data dumps, or textual personnel adjustment forms. The AI assistant will parse them into structured database actions.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -882,7 +911,7 @@ export default function AdminDashboard() {
                 
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button className="btn-premium" onClick={handleParseMemo} disabled={isParsing}>
-                    {isParsing ? 'Processing with Gemini...' : 'Analyze with Gemini API'}
+                    {isParsing ? 'Processing with AI...' : 'Analyze with Archon AI'}
                   </button>
                   <button 
                     className="btn-premium btn-secondary"
@@ -910,7 +939,7 @@ Effective June 1, 2026:
             <div>
               {parsedActions && (
                 <div className="glass-panel" style={{ padding: '2rem' }}>
-                  <h3 style={{ marginBottom: '1rem' }}>Gemini Extracted Actions</h3>
+                  <h3 style={{ marginBottom: '1rem' }}>AI Extracted Actions</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
                     {parsedActions.map((act, idx) => (
                       <div key={idx} className="glass-panel" style={{ padding: '1rem', borderLeft: '3px solid var(--color-secondary)' }}>
