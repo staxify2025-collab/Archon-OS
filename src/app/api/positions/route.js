@@ -37,7 +37,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required position fields' }, { status: 400 });
     }
     
-    const userEmail = 'marcus@houstoncounty.gov';
+    const userEmail = 'sherri.garner@houstoncounty.gov';
     
     const res = await db.run(
       `INSERT INTO positions (dept_id, job_code, job_title, grade, approved_slots, filled_slots, status)
@@ -71,7 +71,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Missing position ID' }, { status: 400 });
     }
     
-    const userEmail = 'marcus@houstoncounty.gov';
+    const userEmail = 'sherri.garner@houstoncounty.gov';
     const oldPosition = await db.get('SELECT * FROM positions WHERE id = ?', [id]);
     if (!oldPosition) {
       return NextResponse.json({ error: 'Position not found' }, { status: 404 });

@@ -27,7 +27,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid actions body' }, { status: 400 });
     }
     
-    const userEmail = 'marcus@houstoncounty.gov';
+    const userEmail = 'sherri.garner@houstoncounty.gov';
     
     for (const action of actions) {
       let empId = null;
@@ -84,7 +84,7 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Missing action ID or status' }, { status: 400 });
     }
     
-    const userEmail = 'marcus@houstoncounty.gov';
+    const userEmail = 'sherri.garner@houstoncounty.gov';
     
     // Fetch the target personnel action details
     const action = await db.get('SELECT * FROM personnel_actions WHERE id = ?', [id]);
@@ -193,7 +193,7 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Missing action ID' }, { status: 400 });
     }
     
-    const userEmail = 'marcus@houstoncounty.gov';
+    const userEmail = 'sherri.garner@houstoncounty.gov';
     
     // Delete action
     await db.run('DELETE FROM personnel_actions WHERE id = ?', [id]);

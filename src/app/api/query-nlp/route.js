@@ -29,7 +29,7 @@ export async function POST(request) {
     const isWrite = /insert\s+|update\s+|delete\s+/i.test(cleanSql);
 
     let result = null;
-    let userEmail = 'marcus@houstoncounty.gov'; // Mock logged-in user
+    let userEmail = 'sherri.garner@houstoncounty.gov'; // Mock logged-in user
 
     if (isWrite) {
       // Execute database mutation

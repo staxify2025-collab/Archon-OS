@@ -393,10 +393,10 @@ export default function AdminDashboard() {
 
         <div className="sidebar-footer">
           <div className="user-profile-card">
-            <div className="user-avatar">MA</div>
+            <div className="user-avatar">SG</div>
             <div className="user-info">
-              <h4>Marcus Aurelius</h4>
-              <p>Finance Director (Admin)</p>
+              <h4>Sherri Garner</h4>
+              <p>Personnel Director</p>
             </div>
           </div>
         </div>
