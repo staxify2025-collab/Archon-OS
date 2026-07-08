@@ -357,7 +357,9 @@ let dbInstance = null;
 async function getDb() {
   if (dbInstance) return dbInstance;
 
-  if (sqlite3 && sqliteOpen) {
+  const isServerless = !!(process.env.FIREBASE_CONFIG || process.env.FUNCTIONS_EMULATOR || process.env.VERCEL);
+
+  if (!isServerless && sqlite3 && sqliteOpen) {
     try {
       dbInstance = await sqliteOpen({
         filename: DB_SQLITE_PATH,
@@ -372,7 +374,7 @@ async function getDb() {
 
   // Fallback
   dbInstance = new JsonDbWrapper();
-  console.log('Opened JSON-based in-memory database at:', DB_JSON_PATH);
+  console.log('Opened JSON-based in-memory database fallback at:', DB_JSON_PATH);
   return dbInstance;
 }
 
