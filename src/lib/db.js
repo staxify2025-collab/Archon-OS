@@ -92,8 +92,9 @@ class JsonDbWrapper {
 
   async run(sql, params = []) {
     const s = sql.trim().toLowerCase();
+    const sNormal = s.replace(/\s+/g, ' ');
     
-    if (s.startsWith('delete from')) {
+    if (sNormal.startsWith('delete from')) {
       const tableName = sql.split(/\s+/)[2].toLowerCase();
       if (jsonDb[tableName]) {
         jsonDb[tableName] = [];
@@ -102,7 +103,7 @@ class JsonDbWrapper {
       return { lastID: 0, changes: 0 };
     }
 
-    if (s.startsWith('insert into')) {
+    if (sNormal.startsWith('insert into')) {
       // Extract table name
       const tableName = sql.split(/\s+/)[2].toLowerCase();
       const list = jsonDb[tableName];
@@ -185,18 +186,18 @@ class JsonDbWrapper {
       return { lastID, changes: 1 };
     }
 
-    if (s.startsWith('update positions')) {
-      if (s.includes('set filled_slots = 1')) {
-        if (s.includes('fin-dir')) {
+    if (sNormal.startsWith('update positions')) {
+      if (sNormal.includes('set filled_slots = 1')) {
+        if (sNormal.includes('fin-dir')) {
           jsonDb.positions.forEach(p => { if (p.job_code === 'FIN-DIR') p.filled_slots = 1; });
-        } else if (s.includes('sr-acct')) {
+        } else if (sNormal.includes('sr-acct')) {
           jsonDb.positions.forEach(p => { if (p.job_code === 'SR-ACCT') p.filled_slots = 1; });
-        } else if (s.includes('rb-mnt')) {
+        } else if (sNormal.includes('rb-mnt')) {
           jsonDb.positions.forEach(p => { if (p.job_code === 'RB-MNT') p.filled_slots = 1; });
-        } else if (s.includes('jail-dep')) {
+        } else if (sNormal.includes('jail-dep')) {
           jsonDb.positions.forEach(p => { if (p.job_code === 'JAIL-DEP') p.filled_slots = 1; });
         }
-      } else if (s.includes('set filled_slots =')) {
+      } else if (sNormal.includes('set filled_slots =')) {
         // Generic set filled slots
         // UPDATE positions SET filled_slots = ? WHERE id = ?
         const match = sql.match(/WHERE\s+id\s*=\s*(\d+)/i);
@@ -215,8 +216,9 @@ class JsonDbWrapper {
 
   async get(sql, params = []) {
     const s = sql.trim().toLowerCase();
+    const sNormal = s.replace(/\s+/g, ' ');
     
-    if (s.includes('from employees') && s.includes('where e.email = ?')) {
+    if (sNormal.includes('from employees') && sNormal.includes('where e.email = ?')) {
       const email = params[0];
       const emp = jsonDb.employees.find(e => e.email === email);
       if (!emp) return null;
@@ -229,7 +231,7 @@ class JsonDbWrapper {
       };
     }
 
-    if (s.includes('from employees') && s.includes('where employee_id_number = ?')) {
+    if (sNormal.includes('from employees') && sNormal.includes('where employee_id_number = ?')) {
       const idNum = params[0];
       const emp = jsonDb.employees.find(e => e.employee_id_number === idNum);
       return emp || null;
@@ -240,12 +242,13 @@ class JsonDbWrapper {
 
   async all(sql, params = []) {
     const s = sql.trim().toLowerCase();
+    const sNormal = s.replace(/\s+/g, ' ');
 
-    if (s.includes('select * from departments')) {
+    if (sNormal.includes('select * from departments')) {
       return jsonDb.departments;
     }
 
-    if (s.includes('select p.*, d.name as dept_name')) {
+    if (sNormal.includes('select p.*, d.name as dept_name')) {
       // Join positions + departments + employees
       return jsonDb.positions.map(p => {
         const d = jsonDb.departments.find(dept => dept.id === p.dept_id) || {};
@@ -272,7 +275,7 @@ class JsonDbWrapper {
       });
     }
 
-    if (s.includes('select id, employee_id_number, first_name, last_name, email, current_position_id, status, hire_date from employees')) {
+    if (sNormal.includes('select id, employee_id_number, first_name, last_name, email, current_position_id, status, hire_date from employees')) {
       return jsonDb.employees.map(e => ({
         id: e.id,
         employee_id_number: e.employee_id_number,
@@ -285,7 +288,7 @@ class JsonDbWrapper {
       }));
     }
 
-    if (s.includes('select pa.*, e.employee_id_number, e.first_name, e.last_name')) {
+    if (sNormal.includes('select pa.*, e.employee_id_number, e.first_name, e.last_name')) {
       return jsonDb.personnel_actions.map(pa => {
         const e = jsonDb.employees.find(emp => emp.id === pa.employee_id) || {};
         return {
@@ -298,7 +301,7 @@ class JsonDbWrapper {
     }
 
     // CFO Arbitrary custom SELECTs emulated
-    if (s.includes('where d.cost_center_code = \'53100\'') || s.includes('road & bridge')) {
+    if (sNormal.includes('where d.cost_center_code = \'53100\'') || sNormal.includes('road & bridge')) {
       // Returns Road & Bridge budget actions
       const rbDept = jsonDb.departments.find(d => d.cost_center_code === '53100') || {};
       const rbEmps = jsonDb.employees.filter(e => {
@@ -328,7 +331,7 @@ class JsonDbWrapper {
       return results;
     }
 
-    if (s.includes('where pa.proposed_job_title like \'%jail%\'')) {
+    if (sNormal.includes('where pa.proposed_job_title like \'%jail%\'')) {
       // Jail actions
       return jsonDb.personnel_actions.map(pa => {
         const e = jsonDb.employees.find(emp => emp.id === pa.employee_id) || {};
@@ -344,7 +347,7 @@ class JsonDbWrapper {
     }
 
     // Default SELECT * from audit_logs
-    if (s.includes('from audit_logs')) {
+    if (sNormal.includes('from audit_logs')) {
       return jsonDb.audit_logs;
     }
 
