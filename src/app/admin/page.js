@@ -11,8 +11,13 @@ export default function AdminDashboard() {
   const [positions, setPositions] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [selectedDept, setSelectedDept] = useState('All');
-  
-  // KPI Metrics
+
+  // NL Query Search State
+  const [nlQuery, setNlQuery] = useState('');
+  const [isQuerying, setIsQuerying] = useState(false);
+  const [queryResult, setQueryResult] = useState(null);
+  const [generatedSql, setGeneratedSql] = useState('');
+  const [sqlExplanation, setSqlExplanation] = useState('');
   const [metrics, setMetrics] = useState({
     approved: 0,
     filled: 0,
@@ -26,22 +31,20 @@ export default function AdminDashboard() {
   const [commissionActions, setCommissionActions] = useState([]);
   const [showMemo, setShowMemo] = useState(false);
 
-  // Ingestion State
-  const [reconciliationReport, setReconciliationReport] = useState(null);
-  const [isReconciling, setIsReconciling] = useState(false);
+  // Ingest upload & AI states
+  const fileInputRef = React.useRef(null);
+  const [ingestedFile, setIngestedFile] = useState(null);
+  const [ingestedText, setIngestedText] = useState('');
+  const [ingestQuery, setIngestQuery] = useState('');
+  const [isProcessingIngest, setIsProcessingIngest] = useState(false);
+  const [ingestResult, setIngestResult] = useState(null);
 
-  // AI Memo Parsing State
   const [memoText, setMemoText] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [parsedActions, setParsedActions] = useState(null);
   const [saveStatus, setSaveStatus] = useState(null);
 
-  // NL Query Search State
-  const [nlQuery, setNlQuery] = useState('');
-  const [isQuerying, setIsQuerying] = useState(false);
-  const [queryResult, setQueryResult] = useState(null);
-  const [generatedSql, setGeneratedSql] = useState('');
-  const [sqlExplanation, setSqlExplanation] = useState('');
+
 
   // Position Editing & Adding Modals
   const [editingPosition, setEditingPosition] = useState(null);
@@ -282,6 +285,7 @@ export default function AdminDashboard() {
       console.error(err);
     }
   };
+
   // Submit New Position Form
   const handleCreatePosition = async (e) => {
     e.preventDefault();
@@ -311,6 +315,69 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Handle file upload and parse text content
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIngestedFile(file);
+    setIsProcessingIngest(true);
+    setIngestResult(null);
+    setIngestedText('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/ingest', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIngestedText(data.textContent);
+      } else {
+        alert(data.error || 'Failed to ingest file.');
+        setIngestedFile(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error uploading file.');
+      setIngestedFile(null);
+    } finally {
+      setIsProcessingIngest(false);
+    }
+  };
+
+  // Submit User Query + Ingested Text to the AI mutation/query engine
+  const handleQueryIngestedData = async () => {
+    if (!ingestQuery.trim()) return;
+    setIsProcessingIngest(true);
+    setIngestResult(null);
+
+    const fullPrompt = `Document Content:\n${ingestedText}\n\nUser Request: ${ingestQuery}`;
+
+    try {
+      const res = await fetch('/api/query-nlp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: fullPrompt })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIngestResult(data);
+        fetchData(); // Refresh the positions registry in case changes were executed!
+      } else {
+        setIngestResult({ error: data.error || 'Failed to execute query.' });
+      }
+    } catch (err) {
+      console.error(err);
+      setIngestResult({ error: 'Connection failed.' });
+    } finally {
+      setIsProcessingIngest(false);
     }
   };
 
@@ -945,45 +1012,177 @@ export default function AdminDashboard() {
 
         {activeTab === 'ingest' && (
           <section className="glass-panel" style={{ padding: '2rem' }}>
-            <h2 style={{ marginBottom: '0.5rem' }}>Spreadsheet Ingest & Matching Engine</h2>
+            <h2 style={{ marginBottom: '0.5rem' }}>Spreadsheet & PDF Ingest Command Center</h2>
             <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
-              Upload unstructured annual position tracking sheets or monthly payroll change files. The reconciliation algorithm matches names, salaries, and slot codes to instantly flag anomalies.
+              Upload any unstructured annual position tracking sheets, Excel exports, PDFs, or CSV files. The AI-integrated workspace parses the file and executes any queries or database adjustments you specify in natural language.
             </p>
 
-            <div className="dropzone" onClick={handleAutoReconcile}>
-              <div className="dropzone-icon">📥</div>
-              <h3>Click to Ingest County Payroll Spreadsheet</h3>
-              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                This runs reconciliation against the active database roster in-memory
-              </p>
-              {isReconciling && <p style={{ color: 'var(--color-primary)' }}>Executing parsing engine...</p>}
-            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              accept=".xlsx,.xls,.csv,.pdf,.txt" 
+              onChange={handleFileUpload} 
+            />
 
-            {reconciliationReport && (
-              <div style={{ marginTop: '2.5rem' }}>
-                <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>
-                  Reconciliation Discrepancy Log ({reconciliationReport.discrepancies?.length || 0} issues flagged)
-                </h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {reconciliationReport.discrepancies?.map((disc, idx) => (
-                    <div 
-                      key={idx} 
-                      className="glass-panel" 
-                      style={{ 
-                        padding: '1.2rem', 
-                        borderLeft: `4px solid ${disc.severity === 'critical' ? 'var(--status-hold)' : 'var(--status-freeze)'}` 
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <strong style={{ textTransform: 'uppercase', fontSize: '0.85rem', color: disc.severity === 'critical' ? 'var(--status-hold)' : 'var(--status-freeze)' }}>
-                          {disc.type} - {disc.severity}
-                        </strong>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Target: {disc.target}</span>
-                      </div>
-                      <p style={{ fontSize: '0.95rem', color: 'var(--color-text-main)' }}>{disc.message}</p>
+            {!ingestedFile ? (
+              <div 
+                className="dropzone" 
+                onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                style={{ cursor: 'pointer', textAlign: 'center', padding: '3rem', border: '2px dashed var(--border-glass)', borderRadius: '12px' }}
+              >
+                <div className="dropzone-icon" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📥</div>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Click to Upload County Spreadsheet or PDF</h3>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                  Supports Excel (.xlsx, .xls), CSV, PDF, and Text (.txt) formats
+                </p>
+                {isProcessingIngest && (
+                  <div style={{ marginTop: '1.5rem', color: 'var(--color-primary)', fontWeight: '600' }}>
+                    Parsing document structure...
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* File Details Bar */}
+                <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: 'rgba(255, 255, 255, 0.05)' }}>
+                  <div>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--color-primary)' }}>📄 {ingestedFile.name}</span>
+                    <span style={{ marginLeft: '1rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                      ({(ingestedFile.size / 1024).toFixed(1)} KB)
+                    </span>
+                  </div>
+                  <button 
+                    className="btn-premium btn-secondary" 
+                    style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderColor: 'var(--status-hold)', color: 'var(--status-hold)' }}
+                    onClick={() => {
+                      setIngestedFile(null);
+                      setIngestedText('');
+                      setIngestResult(null);
+                      setIngestQuery('');
+                    }}
+                  >
+                    Clear File
+                  </button>
+                </div>
+
+                {/* Side-by-side workspace */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  {/* Left Column: Preview */}
+                  <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '550px' }}>
+                    <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-glass)', background: 'rgba(255, 255, 255, 0.02)' }}>
+                      <h3 style={{ fontSize: '1rem', fontWeight: '700' }}>Ingested Document Preview</h3>
                     </div>
-                  ))}
+                    <div style={{ padding: '1.5rem', overflowY: 'auto', flexGrow: 1, fontFamily: 'monospace', fontSize: '0.85rem', whiteSpace: 'pre-wrap', color: 'var(--color-text-muted)', lineHeight: '1.5' }}>
+                      {ingestedText || 'No text extracted.'}
+                    </div>
+                  </div>
+
+                  {/* Right Column: AI Console */}
+                  <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', height: '550px', padding: '1.5rem', gap: '1.5rem' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.5rem' }}>Archon AI Command Console</h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                        Instruct the AI to query, extract, organize, or directly update the active position registry with the ingested document.
+                      </p>
+                    </div>
+
+                    <textarea
+                      className="premium-input"
+                      style={{ width: '100%', minHeight: '120px', fontSize: '0.9rem', padding: '1rem', resize: 'none' }}
+                      placeholder="e.g. 'Match this spreadsheet and create any missing positions in the database' or 'List all names in this PDF and show their salaries'"
+                      value={ingestQuery}
+                      onChange={(e) => setIngestQuery(e.target.value)}
+                    />
+
+                    <button 
+                      className="btn-premium" 
+                      onClick={handleQueryIngestedData} 
+                      disabled={isProcessingIngest || !ingestQuery.trim()}
+                      style={{ padding: '0.8rem' }}
+                    >
+                      {isProcessingIngest ? 'Executing AI Engine...' : 'Submit AI Instruction'}
+                    </button>
+
+                    {/* Result panel */}
+                    <div className="glass-panel" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'rgba(0, 0, 0, 0.2)' }}>
+                      <div style={{ padding: '0.8rem 1.2rem', borderBottom: '1px solid var(--border-glass)', background: 'rgba(255, 255, 255, 0.02)' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>AI Output & Action Logs</span>
+                      </div>
+                      
+                      <div style={{ padding: '1.2rem', overflowY: 'auto', flexGrow: 1, fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                        {isProcessingIngest && (
+                          <div style={{ color: 'var(--color-primary)' }}>
+                            &gt; Analyzing instructions...<br />
+                            &gt; Processing database matching...
+                          </div>
+                        )}
+
+                        {!isProcessingIngest && ingestResult && (
+                          <div>
+                            {ingestResult.error ? (
+                              <div style={{ color: 'var(--status-hold)' }}>
+                                Error: {ingestResult.error}
+                              </div>
+                            ) : (
+                              <div>
+                                {ingestResult.explanation && (
+                                  <div style={{ color: 'var(--status-active)', marginBottom: '1rem', fontWeight: '600' }}>
+                                    ✓ Action Completed: {ingestResult.explanation}
+                                  </div>
+                                )}
+                                
+                                {ingestResult.sql && (
+                                  <div style={{ marginBottom: '1rem' }}>
+                                    <span style={{ color: 'var(--color-text-muted)' }}>Executed Query:</span>
+                                    <pre style={{ background: 'rgba(0,0,0,0.4)', padding: '0.5rem', borderRadius: '4px', marginTop: '0.2rem', overflowX: 'auto' }}>
+                                      {ingestResult.sql}
+                                    </pre>
+                                  </div>
+                                )}
+
+                                {ingestResult.results && ingestResult.results.length > 0 ? (
+                                  <div>
+                                    <span style={{ color: 'var(--color-text-muted)' }}>Result Set:</span>
+                                    <div style={{ overflowX: 'auto', marginTop: '0.2rem' }}>
+                                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                                        <thead>
+                                          <tr style={{ borderBottom: '1px solid var(--border-glass)' }}>
+                                            {Object.keys(ingestResult.results[0]).map(key => (
+                                              <th key={key} style={{ padding: '0.3rem', textAlign: 'left' }}>{key}</th>
+                                            ))}
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {ingestResult.results.map((row, rIdx) => (
+                                            <tr key={rIdx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                              {Object.values(row).map((val, cIdx) => (
+                                                <td key={cIdx} style={{ padding: '0.3rem' }}>{String(val)}</td>
+                                              ))}
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                ) : ingestResult.results && (
+                                  <div style={{ color: 'var(--color-text-muted)' }}>
+                                    No rows returned.
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {!isProcessingIngest && !ingestResult && (
+                          <div style={{ color: 'var(--color-text-dark)', fontStyle: 'italic' }}>
+                            Awaiting query submissions...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
