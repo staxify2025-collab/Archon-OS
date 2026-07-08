@@ -57,13 +57,17 @@ let jsonDb = {
 
 // Load JSON db from file if it exists
 function loadJsonDb() {
-  if (fs.existsSync(DB_JSON_PATH)) {
-    try {
+  try {
+    if (fs.existsSync(DB_JSON_PATH)) {
       const data = fs.readFileSync(DB_JSON_PATH, 'utf8');
       jsonDb = JSON.parse(data);
-    } catch (err) {
-      console.error('Error loading JSON DB, starting fresh:', err);
+    } else {
+      // In serverless environments, require() inlines the file at build time.
+      jsonDb = require('../../database.json');
+      console.log('Successfully loaded inlined database.json');
     }
+  } catch (err) {
+    console.error('Error loading JSON DB, starting fresh:', err);
   }
 }
 
