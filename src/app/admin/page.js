@@ -341,6 +341,8 @@ export default function AdminDashboard() {
     ? positions
     : positions.filter(p => p.cost_center_code === selectedDept);
 
+  const uniqueDivisions = Array.from(new Set(departments.map(d => d.division)));
+
   return (
     <div className="dashboard-layout">
       {/* Sidebar Navigation */}
@@ -516,57 +518,87 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {selectedDept === 'All' ? (
-                    departments.map(dept => {
-                      const deptPos = filteredPositions.filter(p => p.cost_center_code === dept.cost_center_code);
-                      if (deptPos.length === 0) return null;
+                    uniqueDivisions.map(division => {
+                      const divisionDepts = departments.filter(d => d.division === division);
+                      // Check if there are any positions in this entire division
+                      const divisionPositionsCount = filteredPositions.filter(p => 
+                        divisionDepts.some(d => d.cost_center_code === p.cost_center_code)
+                      ).length;
+                      
+                      if (divisionPositionsCount === 0) return null;
+                      
                       return (
-                        <React.Fragment key={dept.id}>
-                          {/* Department Heading Row */}
-                          <tr className="dept-group-header-row" style={{ pageBreakAfter: 'avoid' }}>
+                        <React.Fragment key={division}>
+                          {/* Division Section Header */}
+                          <tr className="division-header-row" style={{ pageBreakAfter: 'avoid' }}>
                             <td colSpan="8" style={{
-                              background: '#f8fafc',
-                              color: '#0f172a',
-                              fontWeight: '700',
+                              background: '#0f172a',
+                              color: '#ffffff',
+                              fontWeight: '800',
                               fontSize: '0.9rem',
                               padding: '0.8rem 1.2rem',
-                              borderBottom: '2px solid #cbd5e1',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
                               textAlign: 'left'
                             }}>
-                              📁 {dept.cost_center_code} - {dept.name}
+                              🏢 {division}
                             </td>
                           </tr>
-                          {deptPos.map(pos => (
-                            <tr key={pos.id}>
-                              <td style={{ fontWeight: '700' }}>{pos.job_code}</td>
-                              <td>{pos.job_title}</td>
-                              <td>{pos.cost_center_code}</td>
-                              <td>{pos.grade}</td>
-                              <td>
-                                <strong>{pos.filled_slots}</strong> / {pos.approved_slots}
-                              </td>
-                              <td>
-                                {pos.employee_names ? (
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                                    {pos.employee_names.split(',').map((name, i) => (
-                                      <span key={i} style={{ color: 'var(--color-text-main)' }}>{name.trim()}</span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <span style={{ color: 'var(--color-text-dark)', fontStyle: 'italic' }}>Vacant</span>
-                                )}
-                              </td>
-                              <td>{getStatusBadge(pos.status)}</td>
-                              <td>
-                                <button 
-                                  className="btn-premium btn-secondary"
-                                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                                  onClick={() => setEditingPosition(pos)}
-                                >
-                                  Edit
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                          
+                          {divisionDepts.map(dept => {
+                            const deptPos = filteredPositions.filter(p => p.cost_center_code === dept.cost_center_code);
+                            if (deptPos.length === 0) return null;
+                            return (
+                              <React.Fragment key={dept.id}>
+                                {/* Department Sub-heading Row */}
+                                <tr className="dept-group-header-row" style={{ pageBreakAfter: 'avoid' }}>
+                                  <td colSpan="8" style={{
+                                    background: '#f8fafc',
+                                    color: '#0f172a',
+                                    fontWeight: '700',
+                                    fontSize: '0.85rem',
+                                    padding: '0.6rem 1.2rem 0.6rem 2.5rem',
+                                    borderBottom: '2px solid #cbd5e1',
+                                    textAlign: 'left'
+                                  }}>
+                                    📁 {dept.cost_center_code} - {dept.name}
+                                  </td>
+                                </tr>
+                                {deptPos.map(pos => (
+                                  <tr key={pos.id} className="position-row">
+                                    <td style={{ fontWeight: '700', paddingLeft: '2.5rem' }}>{pos.job_code}</td>
+                                    <td>{pos.job_title}</td>
+                                    <td>{pos.cost_center_code}</td>
+                                    <td>{pos.grade}</td>
+                                    <td>
+                                      <strong>{pos.filled_slots}</strong> / {pos.approved_slots}
+                                    </td>
+                                    <td>
+                                      {pos.employee_names ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                          {pos.employee_names.split(',').map((name, i) => (
+                                            <span key={i} style={{ color: 'var(--color-text-main)' }}>{name.trim()}</span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <span style={{ color: 'var(--color-text-dark)', fontStyle: 'italic' }}>Vacant</span>
+                                      )}
+                                    </td>
+                                    <td>{getStatusBadge(pos.status)}</td>
+                                    <td>
+                                      <button 
+                                        className="btn-premium btn-secondary"
+                                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                        onClick={() => setEditingPosition(pos)}
+                                      >
+                                        Edit
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </React.Fragment>
+                            );
+                          })}
                         </React.Fragment>
                       );
                     })
