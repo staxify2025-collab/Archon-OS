@@ -4,7 +4,7 @@
       "id": 31,
       "cost_center_code": "51100",
       "name": "Commission",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 1500000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -12,7 +12,7 @@
       "id": 32,
       "cost_center_code": "51110",
       "name": "Accounting",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 900000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -20,7 +20,7 @@
       "id": 33,
       "cost_center_code": "51130",
       "name": "Facilities and Grounds",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 2500000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -28,7 +28,7 @@
       "id": 34,
       "cost_center_code": "51300",
       "name": "Probate",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 3500000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -36,7 +36,7 @@
       "id": 35,
       "cost_center_code": "51500",
       "name": "Revenue Commission",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 1400000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -44,7 +44,7 @@
       "id": 36,
       "cost_center_code": "51920",
       "name": "Registrar",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 500000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -52,7 +52,7 @@
       "id": 37,
       "cost_center_code": "51960",
       "name": "Personnel",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 600000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -60,7 +60,7 @@
       "id": 38,
       "cost_center_code": "51961",
       "name": "Safety",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 300000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -68,7 +68,7 @@
       "id": 39,
       "cost_center_code": "51965",
       "name": "Information Technology",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 1800000,
       "created_at": "2026-07-08 15:01:19"
     },
@@ -76,7 +76,7 @@
       "id": 40,
       "cost_center_code": "51985",
       "name": "Reappraisal",
-      "division": "General Government",
+      "division": "Houston County Departments",
       "budget_limit": 1100000,
       "created_at": "2026-07-08 15:01:19"
     },

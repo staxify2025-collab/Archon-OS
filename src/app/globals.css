@@ -663,8 +663,8 @@ h1, h2, h3, h4, h5, h6 {
   .panel-header select,
   .header-actions,
   .sidebar-footer,
-  th:last-child,
-  td:last-child {
+  tr:not(.division-header-row):not(.dept-group-header-row) th:last-child,
+  tr:not(.division-header-row):not(.dept-group-header-row) td:last-child {
     display: none !important;
   }
   .main-content {
@@ -703,11 +703,18 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #f1f5f9 !important;
     font-weight: bold !important;
   }
+  .division-header-row td {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    display: table-cell !important;
+  }
   .dept-group-header-row td {
     background-color: #e2e8f0 !important;
     font-weight: bold !important;
     color: #0f172a !important;
     border-bottom: 2px solid #0f172a !important;
+    display: table-cell !important;
   }
   .badge {
     padding: 1px 5px !important;
