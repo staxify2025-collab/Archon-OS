@@ -388,21 +388,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .badge-hold {
-  background: rgba(220, 38, 38, 0.08);
-  color: var(--status-hold);
-  border: 1px solid rgba(220, 38, 38, 0.2);
+  background: rgba(202, 138, 4, 0.08);
+  color: #ca8a04;
+  border: 1px solid rgba(202, 138, 4, 0.2);
 }
 
 .badge-freeze {
-  background: rgba(234, 88, 12, 0.08);
-  color: var(--status-freeze);
-  border: 1px solid rgba(234, 88, 12, 0.2);
+  background: rgba(202, 138, 4, 0.08);
+  color: #ca8a04;
+  border: 1px solid rgba(202, 138, 4, 0.2);
 }
 
 .badge-pipeline {
-  background: rgba(2, 132, 199, 0.08);
-  color: var(--status-pipeline);
-  border: 1px solid rgba(2, 132, 199, 0.2);
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .badge-highlight {
@@ -703,10 +703,13 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #f1f5f9 !important;
     font-weight: bold !important;
   }
+  .dept-group-header-row td {
+    background-color: #e2e8f0 !important;
+    font-weight: bold !important;
+    color: #0f172a !important;
+    border-bottom: 2px solid #0f172a !important;
+  }
   .badge {
-    border: 1.5px solid #000000 !important;
-    background: transparent !important;
-    color: #000000 !important;
     padding: 1px 5px !important;
     font-weight: bold !important;
     font-size: 0.7rem !important;

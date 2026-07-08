@@ -228,20 +228,21 @@ We have a SQLite database with the following tables:
 
   const prompt = `
 You are a database administrator for Archon OS, a county government ERP.
-Convert the following natural language query from the CFO into a single, clean SQL SELECT statement that can run on SQLite.
+Convert the following natural language query or command from the CFO/Personnel Director into a single, clean SQL statement that can run on SQLite.
+The request may be a read query (SELECT) or a mutation command (INSERT, UPDATE, DELETE).
 Return ONLY a JSON object containing two fields:
-1. "sql": The exact SQL query string. Do NOT write any modifying queries (like INSERT, UPDATE, DELETE, DROP). It must be read-only SELECT.
-2. "explanation": A brief, user-friendly explanation of what the query searches for and returns.
+1. "sql": The exact SQL statement string. Modifying statements (INSERT, UPDATE, DELETE) are permitted if the user requests a database change. Do NOT write any DROP TABLE or ALTER TABLE queries.
+2. "explanation": A brief, user-friendly explanation of what the SQL statement does.
 
-CFO Query: "${query}"
+CFO Request: "${query}"
 
 Database Schema:
 ${schemaDescription}
 
 Example output structure:
 {
-  "sql": "SELECT * FROM departments",
-  "explanation": "Retrieves all department records."
+  "sql": "UPDATE positions SET status = 'Freeze' WHERE job_code = '467'",
+  "explanation": "Freezes the Accounting Manager position."
 }
 `;
 

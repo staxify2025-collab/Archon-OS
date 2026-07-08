@@ -256,7 +256,6 @@ export default function AdminDashboard() {
       console.error(err);
     }
   };
-
   // Submit Position Direct Edit
   const handleSavePositionEdit = async () => {
     if (!editingPosition) return;
@@ -269,7 +268,8 @@ export default function AdminDashboard() {
           approved_slots: parseInt(editingPosition.approved_slots),
           status: editingPosition.status,
           job_title: editingPosition.job_title,
-          grade: editingPosition.grade
+          grade: editingPosition.grade,
+          employee_names: editingPosition.employee_names
         })
       });
       if (res.ok) {
@@ -282,7 +282,6 @@ export default function AdminDashboard() {
       console.error(err);
     }
   };
-
   // Submit New Position Form
   const handleCreatePosition = async (e) => {
     e.preventDefault();
@@ -320,7 +319,10 @@ export default function AdminDashboard() {
       case 'Active': return <span className="badge badge-active">Active</span>;
       case 'Hold': return <span className="badge badge-hold">On Hold</span>;
       case 'Freeze': return <span className="badge badge-freeze">Frozen</span>;
-      case 'Hiring Pipeline': return <span className="badge badge-pipeline">Recruiting</span>;
+      case 'Hiring Pipeline':
+      case 'Recruiting':
+      case 'Vacant':
+        return <span className="badge badge-pipeline">Vacant</span>;
       default: return <span className="badge">{status}</span>;
     }
   };
@@ -513,38 +515,95 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPositions.map(pos => (
-                    <tr key={pos.id}>
-                      <td style={{ fontWeight: '700' }}>{pos.job_code}</td>
-                      <td>{pos.job_title}</td>
-                      <td>{pos.cost_center_code} ({pos.dept_name})</td>
-                      <td>{pos.grade}</td>
-                      <td>
-                        <strong>{pos.filled_slots}</strong> / {pos.approved_slots}
-                      </td>
-                      <td>
-                        {pos.employee_names ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                            {pos.employee_names.split(',').map((name, i) => (
-                              <span key={i} style={{ color: 'var(--color-text-main)' }}>{name.trim()}</span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span style={{ color: 'var(--color-text-dark)', fontStyle: 'italic' }}>Vacant</span>
-                        )}
-                      </td>
-                      <td>{getStatusBadge(pos.status)}</td>
-                      <td>
-                        <button 
-                          className="btn-premium btn-secondary"
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                          onClick={() => setEditingPosition(pos)}
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {selectedDept === 'All' ? (
+                    departments.map(dept => {
+                      const deptPos = filteredPositions.filter(p => p.cost_center_code === dept.cost_center_code);
+                      if (deptPos.length === 0) return null;
+                      return (
+                        <React.Fragment key={dept.id}>
+                          {/* Department Heading Row */}
+                          <tr className="dept-group-header-row" style={{ pageBreakAfter: 'avoid' }}>
+                            <td colSpan="8" style={{
+                              background: '#f8fafc',
+                              color: '#0f172a',
+                              fontWeight: '700',
+                              fontSize: '0.9rem',
+                              padding: '0.8rem 1.2rem',
+                              borderBottom: '2px solid #cbd5e1',
+                              textAlign: 'left'
+                            }}>
+                              📁 {dept.cost_center_code} - {dept.name}
+                            </td>
+                          </tr>
+                          {deptPos.map(pos => (
+                            <tr key={pos.id}>
+                              <td style={{ fontWeight: '700' }}>{pos.job_code}</td>
+                              <td>{pos.job_title}</td>
+                              <td>{pos.cost_center_code}</td>
+                              <td>{pos.grade}</td>
+                              <td>
+                                <strong>{pos.filled_slots}</strong> / {pos.approved_slots}
+                              </td>
+                              <td>
+                                {pos.employee_names ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                    {pos.employee_names.split(',').map((name, i) => (
+                                      <span key={i} style={{ color: 'var(--color-text-main)' }}>{name.trim()}</span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span style={{ color: 'var(--color-text-dark)', fontStyle: 'italic' }}>Vacant</span>
+                                )}
+                              </td>
+                              <td>{getStatusBadge(pos.status)}</td>
+                              <td>
+                                <button 
+                                  className="btn-premium btn-secondary"
+                                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                  onClick={() => setEditingPosition(pos)}
+                                >
+                                  Edit
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    filteredPositions.map(pos => (
+                      <tr key={pos.id}>
+                        <td style={{ fontWeight: '700' }}>{pos.job_code}</td>
+                        <td>{pos.job_title}</td>
+                        <td>{pos.cost_center_code} ({pos.dept_name})</td>
+                        <td>{pos.grade}</td>
+                        <td>
+                          <strong>{pos.filled_slots}</strong> / {pos.approved_slots}
+                        </td>
+                        <td>
+                          {pos.employee_names ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                              {pos.employee_names.split(',').map((name, i) => (
+                                <span key={i} style={{ color: 'var(--color-text-main)' }}>{name.trim()}</span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--color-text-dark)', fontStyle: 'italic' }}>Vacant</span>
+                          )}
+                        </td>
+                        <td>{getStatusBadge(pos.status)}</td>
+                        <td>
+                          <button 
+                            className="btn-premium btn-secondary"
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                            onClick={() => setEditingPosition(pos)}
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -585,8 +644,15 @@ export default function AdminDashboard() {
                       <option value="Active">Active</option>
                       <option value="Hold">On Hold</option>
                       <option value="Freeze">Frozen</option>
-                      <option value="Hiring Pipeline">Recruiting</option>
+                      <option value="Hiring Pipeline">Vacant (Recruiting)</option>
                     </select>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Active Employee Name(s) (comma-separated)</label>
+                    <input 
+                      type="text" className="premium-input"
+                      value={editingPosition.employee_names || ''}
+                      onChange={(e) => setEditingPosition({ ...editingPosition, employee_names: e.target.value })}
+                      placeholder="e.g. Martha Walker (leave blank / Vacant if empty)"
+                    />
                   </div>
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <button className="btn-premium" style={{ flexGrow: 1 }} onClick={handleSavePositionEdit}>

@@ -275,7 +275,7 @@ async function run() {
     { deptCode: '53100', jobCode: '120', title: 'Admn Asst - Office', grade: 'Grade 9', approved: 1, filled: 1, status: 'Active' },
     { deptCode: '53100', jobCode: '194-1', title: 'Asst County Eng/PE', grade: 'Grade 16', approved: 2, filled: 2, status: 'Active' },
     { deptCode: '53100', jobCode: '384', title: 'Engineering Inspector', grade: 'Grade 11', approved: 5, filled: 4, status: 'Active' },
-    { deptCode: '53100', jobCode: '381', title: 'Engineering Aide II', grade: 'Grade 9', approved: 1, filled: 0, status: 'Hold' }, // Vacant (J Jackson)
+    { deptCode: '53100', jobCode: '381', title: 'Engineering Aide II (J Jackson)', grade: 'Grade 9', approved: 1, filled: 0, status: 'Hold' }, // Vacant (J Jackson)
     { deptCode: '53100', jobCode: '390-1', title: 'Road Foreman', grade: 'Grade 13', approved: 5, filled: 5, status: 'Active' },
     { deptCode: '53100', jobCode: '389', title: 'Concrete Foreman', grade: 'Grade 12', approved: 1, filled: 1, status: 'Active' },
     { deptCode: '53100', jobCode: '642-1', title: 'Crewleader', grade: 'Grade 10', approved: 4, filled: 4, status: 'Active' },
@@ -545,6 +545,31 @@ async function run() {
       [empId, a.type, a.effective, a.currTitle, a.currGrade, a.currSal, a.propTitle, a.propGrade, a.propSal, a.meetingDate]
     );
   }
+
+  console.log('Exporting SQLite data to database.json for serverless deployment fallback...');
+  const fs = require('fs');
+  const path = require('path');
+  
+  const deptsDb = await db.all('SELECT * FROM departments');
+  const positionsDb = await db.all('SELECT * FROM positions');
+  const employeesDb = await db.all('SELECT * FROM employees');
+  const actionsDb = await db.all('SELECT * FROM personnel_actions');
+  const logsDb = await db.all('SELECT * FROM audit_logs');
+
+  const dbData = {
+    departments: deptsDb,
+    positions: positionsDb,
+    employees: employeesDb,
+    personnel_actions: actionsDb,
+    audit_logs: logsDb
+  };
+
+  fs.writeFileSync(
+    path.join(__dirname, '../database.json'),
+    JSON.stringify(dbData, null, 2),
+    'utf8'
+  );
+  console.log('Successfully wrote database.json');
 
   console.log('Database initialization of ALL real Houston County positions and employees completed successfully.');
 }
